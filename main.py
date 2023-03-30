@@ -1,10 +1,11 @@
 import pygame
 import random
 import math
+import time
 
 import collision
 import config as cfg
-import utils
+
 
 
 # Define Node class
@@ -48,12 +49,12 @@ class RRT:
             if math.sqrt((new_node.x - self.goal.x) ** 2 + (
                     new_node.y - self.goal.y) ** 2) < self.final_step and not collision.collision(new_node, final_node,
                                                                                              self.obstacles):
-                final_node.parent = new_node
-                self.nodes.append(final_node)
-                path = [final_node]
-                while path[-1].parent is not None:
-                    path.append(path[-1].parent)
-                return [(node.x, node.y) for node in path[::-1]]
+                    final_node.parent = new_node
+                    self.nodes.append(final_node)
+                    path = [final_node]
+                    while path[-1].parent is not None:
+                        path.append(path[-1].parent)
+                    return [(node.x, node.y) for node in path[::-1]]
         return None
 
     def draw(self, screen):
@@ -122,24 +123,35 @@ pygame.init()
 screen = pygame.display.set_mode((cfg.WIDTH, cfg.HEIGHT))
 pygame.display.set_caption("Rapidly-exploring Random Tree")
 
-clock = pygame.time.Clock()
-
+infoSurface = pygame.Surface((cfg.WIDTH, cfg.HEIGHT))
+infoSurface.set_colorkey((0, 0, 0))
 start, goal = get_start_end_points()
 obstacles = create_obstacles()
 rrt = RRT(start, goal, obstacles)
+startTime = time.perf_counter()
+path = rrt.find_path()
+elapsed = time.perf_counter() - startTime
+elapsed = format(elapsed, '.4f')
+temp = cfg.FONT.render(f'Nodes: {len(rrt.nodes)} Time:{elapsed}s', 0, (0, 255, 0), (0, 0, 1))
+
 running = True
 while running:
+    screen.blit(infoSurface, (0, 0))
+    infoSurface.blit(temp, (cfg.WIDTH - temp.get_width(), cfg.FONT.get_height()))
+
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             running = False
 
         elif event.type == pygame.KEYDOWN:
             if event.key == pygame.K_TAB:
-                path = rrt.find_path()
+
                 rrt.draw(screen)
 
                 if path is not None:
                     pygame.draw.lines(screen, cfg.BLUE, False, path, 3)
+
+                temp = cfg.FONT.render(f'{len(rrt.nodes)}', 0, (255, 255, 0), (0, 0, 1))
 
                 pygame.display.update()
 

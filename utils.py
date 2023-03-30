@@ -11,3 +11,5 @@ def normalize(vx, vy):
 
 def dist(p1, p2):
     return math.hypot(p2.x - p1[0], p2.y - p1[1])
+
+
